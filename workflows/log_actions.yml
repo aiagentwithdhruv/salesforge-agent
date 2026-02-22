@@ -1,0 +1,52 @@
+# SalesForge — Action Logger Workflow
+# Logs every agent action for full audit trail
+#
+# Trigger: Called after each agent step
+# Input: lead_id, action type, details
+
+name: log_agent_action
+description: Log an agent action against a lead for audit trail and analytics.
+
+triggers:
+  - type: tool
+    name: log_action
+    description: "Log an action the agent performed on a lead. Use this after every research, scoring, or outreach step."
+    parameters:
+      lead_id:
+        type: string
+        description: "The Elasticsearch document ID"
+      action_type:
+        type: string
+        description: "Type of action: researched, scored, outreach_generated, outreach_sent, archived"
+      details:
+        type: string
+        description: "Human-readable description of what was done"
+
+steps:
+  - id: append_action
+    action: elasticsearch.update
+    params:
+      index: leads-raw
+      id: "{{ lead_id }}"
+      body:
+        script:
+          source: |
+            if (ctx._source.agent_actions == null) {
+              ctx._source.agent_actions = [];
+            }
+            ctx._source.agent_actions.add(params.action);
+            ctx._source.updated_at = params.now;
+          params:
+            action:
+              action: "{{ action_type }}"
+              timestamp: "{{ 'now' | date }}"
+              details: "{{ details }}"
+            now: "{{ 'now' | date }}"
+
+  - id: respond
+    action: return
+    params:
+      result:
+        status: "logged"
+        lead_id: "{{ lead_id }}"
+        action: "{{ action_type }}"

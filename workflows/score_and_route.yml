@@ -1,0 +1,89 @@
+# SalesForge — Score and Route Workflow
+# Elastic Workflow that scores a lead and routes to appropriate action
+#
+# Trigger: Called by Agent Builder as a tool
+# Input: lead document ID
+# Output: score_tier (Hot/Warm/Cold) + next_action
+
+name: score_and_route
+description: Score a lead based on company attributes and route to the appropriate follow-up action.
+
+triggers:
+  - type: tool
+    name: score_and_route_lead
+    description: "Score a lead and determine the next best action. Returns tier (Hot/Warm/Cold) and recommended action."
+    parameters:
+      lead_id:
+        type: string
+        description: "The Elasticsearch document ID of the lead to score"
+      scoring_context:
+        type: string
+        description: "Optional context about what the user is looking for (e.g., 'SaaS companies ready to buy')"
+
+steps:
+  - id: fetch_lead
+    action: elasticsearch.get
+    params:
+      index: leads-raw
+      id: "{{ lead_id }}"
+
+  - id: calculate_score
+    action: compute
+    params:
+      # Scoring rubric (0-100):
+      # Employee count: 0-25 points
+      # Funding stage: 0-25 points
+      # Industry fit: 0-25 points
+      # Description quality: 0-25 points
+      score: |
+        {% set emp = fetch_lead.employee_count | default(0) %}
+        {% set emp_score = 25 if emp > 200 else (20 if emp > 50 else (10 if emp > 10 else 5)) %}
+
+        {% set funding = fetch_lead.funding_stage | default("Unknown") %}
+        {% set fund_score = 25 if funding in ["Series B", "Series C", "Growth"] else (15 if funding in ["Series A"] else (10 if funding in ["Seed"] else 5)) %}
+
+        {% set industry = fetch_lead.industry | default("") %}
+        {% set ind_score = 25 if industry in ["SaaS", "FinTech", "Cybersecurity"] else (15 if industry in ["HealthTech", "EdTech", "MarTech"] else 10) %}
+
+        {% set desc = fetch_lead.company_description | default("") %}
+        {% set desc_score = 25 if desc | length > 50 else (15 if desc | length > 20 else 5) %}
+
+        {{ emp_score + fund_score + ind_score + desc_score }}
+
+  - id: determine_tier
+    action: compute
+    params:
+      tier: |
+        {% if calculate_score.score >= 75 %}Hot
+        {% elif calculate_score.score >= 45 %}Warm
+        {% else %}Cold{% endif %}
+      next_action: |
+        {% if calculate_score.score >= 75 %}Generate personalized outreach email immediately
+        {% elif calculate_score.score >= 45 %}Add to nurture sequence, research further
+        {% else %}Archive for future review{% endif %}
+
+  - id: update_lead
+    action: elasticsearch.update
+    params:
+      index: leads-raw
+      id: "{{ lead_id }}"
+      body:
+        doc:
+          score: "{{ calculate_score.score }}"
+          score_tier: "{{ determine_tier.tier }}"
+          score_reasoning: "Employee: {{ emp_score }}/25, Funding: {{ fund_score }}/25, Industry: {{ ind_score }}/25, Description: {{ desc_score }}/25"
+          updated_at: "{{ 'now' | date }}"
+          agent_actions:
+            - action: "scored"
+              timestamp: "{{ 'now' | date }}"
+              details: "Scored {{ calculate_score.score }}/100 → {{ determine_tier.tier }}"
+
+  - id: respond
+    action: return
+    params:
+      result:
+        lead_id: "{{ lead_id }}"
+        company: "{{ fetch_lead.company_name }}"
+        score: "{{ calculate_score.score }}"
+        tier: "{{ determine_tier.tier }}"
+        next_action: "{{ determine_tier.next_action }}"

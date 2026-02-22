@@ -1,0 +1,33 @@
+{
+  "name": "generate_outreach",
+  "description": "Generate a personalized outreach email for a lead based on research context from Elasticsearch.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "lead_id": {
+        "type": "string",
+        "description": "Elasticsearch document ID of the lead"
+      },
+      "sender_name": {
+        "type": "string",
+        "description": "Name of the person sending the email"
+      },
+      "sender_company": {
+        "type": "string",
+        "description": "Company sending the email"
+      },
+      "value_prop": {
+        "type": "string",
+        "description": "What value/service you're offering to this lead"
+      },
+      "tone": {
+        "type": "string",
+        "enum": ["professional", "casual", "direct"],
+        "description": "Email tone"
+      }
+    },
+    "required": ["lead_id", "sender_name", "value_prop"]
+  },
+  "implementation": "agent_llm",
+  "prompt_template": "Based on the following lead data from Elasticsearch, generate a personalized outreach email.\n\nLead: {{lead_data}}\nSender: {{sender_name}} from {{sender_company}}\nValue Proposition: {{value_prop}}\nTone: {{tone}}\n\nRequirements:\n- Reference specific details about their company (industry, size, tech stack)\n- Keep under 150 words\n- Include a clear, low-friction CTA\n- No generic templates — this must feel researched"
+}

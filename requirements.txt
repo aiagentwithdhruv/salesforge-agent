@@ -1,0 +1,6 @@
+elasticsearch>=8.17.0
+python-dotenv>=1.0.0
+openai>=1.60.0
+anthropic>=0.45.0
+faker>=33.0.0
+rich>=13.0.0

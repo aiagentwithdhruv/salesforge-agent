@@ -1,0 +1,46 @@
+{
+  "leads-raw": {
+    "mappings": {
+      "properties": {
+        "first_name": { "type": "keyword" },
+        "last_name": { "type": "keyword" },
+        "full_name": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+        "email": { "type": "keyword" },
+        "phone": { "type": "keyword" },
+        "job_title": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+        "company_name": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+        "company_domain": { "type": "keyword" },
+        "industry": { "type": "keyword" },
+        "company_description": { "type": "text" },
+        "company_description_vector": {
+          "type": "dense_vector",
+          "dims": 1536,
+          "index": true,
+          "similarity": "cosine"
+        },
+        "keywords": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+        "location": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+        "employee_count": { "type": "integer" },
+        "annual_revenue": { "type": "keyword" },
+        "founded_year": { "type": "integer" },
+        "funding_stage": { "type": "keyword" },
+        "tech_stack": { "type": "keyword" },
+        "score": { "type": "float" },
+        "score_tier": { "type": "keyword" },
+        "score_reasoning": { "type": "text" },
+        "outreach_email": { "type": "text" },
+        "agent_actions": {
+          "type": "nested",
+          "properties": {
+            "action": { "type": "keyword" },
+            "timestamp": { "type": "date" },
+            "details": { "type": "text" }
+          }
+        },
+        "created_at": { "type": "date" },
+        "updated_at": { "type": "date" },
+        "source": { "type": "keyword" }
+      }
+    }
+  }
+}

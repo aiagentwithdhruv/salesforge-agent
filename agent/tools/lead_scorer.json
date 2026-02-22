@@ -1,0 +1,19 @@
+{
+  "name": "score_lead",
+  "description": "Score a lead based on company attributes. Returns a score (0-100) and tier (Hot/Warm/Cold) with reasoning.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "lead_id": {
+        "type": "string",
+        "description": "Elasticsearch document ID of the lead"
+      },
+      "custom_criteria": {
+        "type": "string",
+        "description": "Optional: Custom scoring criteria from the user (e.g., 'prioritize fintech companies with >100 employees')"
+      }
+    },
+    "required": ["lead_id"]
+  },
+  "implementation": "workflow:score_and_route"
+}

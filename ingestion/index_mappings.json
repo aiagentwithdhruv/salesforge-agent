@@ -28,6 +28,43 @@
         "score": { "type": "float" },
         "score_tier": { "type": "keyword" },
         "score_reasoning": { "type": "text" },
+        "score_breakdown": {
+          "type": "object",
+          "properties": {
+            "employee": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "max": { "type": "integer" },
+                "reason": { "type": "text" }
+              }
+            },
+            "funding": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "max": { "type": "integer" },
+                "reason": { "type": "text" }
+              }
+            },
+            "industry": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "max": { "type": "integer" },
+                "reason": { "type": "text" }
+              }
+            },
+            "description": {
+              "type": "object",
+              "properties": {
+                "score": { "type": "integer" },
+                "max": { "type": "integer" },
+                "reason": { "type": "text" }
+              }
+            }
+          }
+        },
         "outreach_email": { "type": "text" },
         "agent_actions": {
           "type": "nested",
